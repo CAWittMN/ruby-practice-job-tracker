@@ -1,0 +1,11 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+email_them:
+  job_application: one
+  title: Email them about openings
+  completed: false
+
+follow_up:
+  job_application: one
+  title: Follow up next week
+  completed: true
