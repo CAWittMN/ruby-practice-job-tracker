@@ -46,7 +46,7 @@ module Api
       params.require(:job_application).permit(
         :job_title, :company_name, :applied_on, :status, :cover_letter_provided,
         :linkedin_messages_provided, :company_website, :job_posting_url, :source,
-        contacts_attributes: %i[id name role linkedin_url _destroy],
+        contacts_attributes: %i[id name role email linkedin_url _destroy],
         todos_attributes: %i[id title completed due_on _destroy]
       )
     end
@@ -65,7 +65,7 @@ module Api
         source: application.source,
         created_at: application.created_at,
         contacts: application.contacts.map do |contact|
-          { id: contact.id, name: contact.name, role: contact.role, linkedin_url: contact.linkedin_url }
+          { id: contact.id, name: contact.name, role: contact.role, email: contact.email, linkedin_url: contact.linkedin_url }
         end,
         todos: application.todos.sort_by { |t| [t.completed ? 1 : 0, t.created_at] }.map do |todo|
           { id: todo.id, title: todo.title, completed: todo.completed, due_on: todo.due_on }

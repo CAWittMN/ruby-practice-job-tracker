@@ -4,7 +4,7 @@ import { api } from '../api'
 import { sourceLabel, statusLabel, today } from '../constants'
 
 function emptyContact() {
-  return { name: '', role: '', linkedin_url: '' }
+  return { name: '', role: '', email: '', linkedin_url: '' }
 }
 
 function emptyComm() {
@@ -81,6 +81,7 @@ export default function JobDetail() {
         contact: {
           name: newContact.name.trim(),
           role: newContact.role.trim(),
+          email: newContact.email.trim(),
           linkedin_url: newContact.linkedin_url.trim(),
         },
       })
@@ -102,6 +103,7 @@ export default function JobDetail() {
           contact: {
             name: editingContact.name.trim(),
             role: (editingContact.role || '').trim(),
+            email: (editingContact.email || '').trim(),
             linkedin_url: (editingContact.linkedin_url || '').trim(),
           },
         },
@@ -272,6 +274,14 @@ export default function JobDetail() {
                       }
                     />
                     <input
+                      type="email"
+                      placeholder="Email"
+                      value={editingContact.email || ''}
+                      onChange={(e) =>
+                        setEditingContact({ ...editingContact, email: e.target.value })
+                      }
+                    />
+                    <input
                       type="url"
                       placeholder="LinkedIn URL"
                       value={editingContact.linkedin_url || ''}
@@ -309,6 +319,11 @@ export default function JobDetail() {
                     {c.role && <span className="muted"> · {c.role}</span>}
                   </div>
                   <div className="row-actions">
+                    {c.email && (
+                      <a className="contact-email" href={`mailto:${c.email}`}>
+                        {c.email}
+                      </a>
+                    )}
                     <button
                       type="button"
                       className="btn btn-ghost btn-sm"
@@ -342,6 +357,12 @@ export default function JobDetail() {
             placeholder="Role (e.g. Recruiter)"
             value={newContact.role}
             onChange={(e) => setNewContact({ ...newContact, role: e.target.value })}
+          />
+          <input
+            type="email"
+            placeholder="Email"
+            value={newContact.email}
+            onChange={(e) => setNewContact({ ...newContact, email: e.target.value })}
           />
           <input
             type="url"

@@ -2,6 +2,7 @@ class User < ApplicationRecord
   has_secure_password
 
   has_many :job_applications, dependent: :destroy
+  has_many :ingested_emails, dependent: :nullify
 
   normalizes :email, with: ->(email) { email.to_s.strip.downcase }
 

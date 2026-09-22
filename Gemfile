@@ -55,3 +55,7 @@ gem "vite_rails", "~> 3.11"
 gem "bcrypt", "~> 3.1"
 
 gem "json", "~> 2.7"
+
+# Email ingestion: parse job emails and poll a mailbox over IMAP.
+gem "mail"
+gem "net-imap", require: false

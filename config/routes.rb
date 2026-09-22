@@ -20,6 +20,14 @@ Rails.application.routes.draw do
       resources :contacts, only: %i[create update destroy]
       resources :communications, only: %i[create update destroy]
     end
+
+    resources :ingested_emails, only: %i[index destroy] do
+      member do
+        patch :assign
+        patch :ignore
+        post :create_application
+      end
+    end
   end
 
   # SPA catch-all: let React Router handle client-side routes.

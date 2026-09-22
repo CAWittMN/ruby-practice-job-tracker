@@ -37,11 +37,11 @@ module Api
     end
 
     def contact_params
-      params.require(:contact).permit(:name, :role, :linkedin_url)
+      params.require(:contact).permit(:name, :role, :email, :linkedin_url)
     end
 
     def serialize(contact)
-      { id: contact.id, name: contact.name, role: contact.role, linkedin_url: contact.linkedin_url }
+      { id: contact.id, name: contact.name, role: contact.role, email: contact.email, linkedin_url: contact.linkedin_url }
     end
   end
 end

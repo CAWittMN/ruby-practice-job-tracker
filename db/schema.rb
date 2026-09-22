@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_22_130001) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_22_140001) do
   create_table "communications", force: :cascade do |t|
     t.integer "job_application_id", null: false
     t.integer "contact_id"
@@ -30,7 +30,32 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_22_130001) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "role"
+    t.string "email"
     t.index ["job_application_id"], name: "index_contacts_on_job_application_id"
+  end
+
+  create_table "ingested_emails", force: :cascade do |t|
+    t.integer "user_id"
+    t.integer "job_application_id"
+    t.integer "communication_id"
+    t.string "message_id"
+    t.string "from_address"
+    t.string "from_name"
+    t.string "subject"
+    t.text "body"
+    t.datetime "received_at"
+    t.string "status", default: "unmatched", null: false
+    t.string "kind"
+    t.string "detected_company"
+    t.string "detected_title"
+    t.string "detected_source"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["communication_id"], name: "index_ingested_emails_on_communication_id"
+    t.index ["job_application_id"], name: "index_ingested_emails_on_job_application_id"
+    t.index ["message_id"], name: "index_ingested_emails_on_message_id", unique: true
+    t.index ["status"], name: "index_ingested_emails_on_status"
+    t.index ["user_id"], name: "index_ingested_emails_on_user_id"
   end
 
   create_table "job_applications", force: :cascade do |t|
@@ -70,6 +95,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_22_130001) do
   add_foreign_key "communications", "contacts"
   add_foreign_key "communications", "job_applications"
   add_foreign_key "contacts", "job_applications"
+  add_foreign_key "ingested_emails", "communications"
+  add_foreign_key "ingested_emails", "job_applications"
+  add_foreign_key "ingested_emails", "users"
   add_foreign_key "job_applications", "users"
   add_foreign_key "todos", "job_applications"
 end

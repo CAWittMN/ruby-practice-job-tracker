@@ -616,13 +616,17 @@ select:focus {
 .contact-add,
 .contact-edit {
   display: grid;
-  grid-template-columns: 1fr 1fr 1.5fr auto;
+  grid-template-columns: 1fr 1fr 1.5fr 1.5fr auto;
   gap: 0.5rem;
   align-items: center;
 }
 
 .contact-edit {
   width: 100%;
+}
+
+.contact-email {
+  font-size: 0.85rem;
 }
 
 /* Communications log */
@@ -732,4 +736,54 @@ select:focus {
   .detail-list {
     grid-template-columns: 1fr;
   }
+}
+
+/* Inbox */
+.inbox-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.85rem;
+}
+
+.inbox-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.inbox-subject {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.inbox-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin: 0.25rem 0 0.5rem;
+}
+
+.inbox-snippet {
+  margin: 0.25rem 0 0.85rem;
+  color: #334155;
+}
+
+.inbox-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.inbox-actions select {
+  max-width: 260px;
+}
+
+.kind-tag {
+  text-transform: capitalize;
 }
