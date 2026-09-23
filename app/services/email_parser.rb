@@ -66,7 +66,7 @@ class EmailParser
   private
 
   def subject
-    @mail.subject.to_s.strip
+    normalize(@mail.subject).to_s.strip
   end
 
   def from_address
@@ -84,9 +84,23 @@ class EmailParser
 
   def body
     @body ||= begin
-      text = text_part_body
-      text.presence || strip_html(html_part_body)
+      text = normalize(text_part_body)
+      text.presence || strip_html(normalize(html_part_body))
     end
+  end
+
+  # Mail hands decoded parts back tagged ASCII-8BIT even when the bytes are
+  # valid UTF-8, which later raises Encoding::UndefinedConversionError on regex
+  # matching or the DB write. Reinterpret as UTF-8, falling back to Latin-1 for
+  # genuinely mislabeled mail so nothing raises.
+  def normalize(str)
+    return str if str.nil?
+
+    utf8 = str.to_s.dup.force_encoding(Encoding::UTF_8)
+    return utf8 if utf8.valid_encoding?
+
+    str.to_s.dup.force_encoding(Encoding::ISO_8859_1)
+       .encode(Encoding::UTF_8, invalid: :replace, undef: :replace)
   end
 
   def text_part_body
