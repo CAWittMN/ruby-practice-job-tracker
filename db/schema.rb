@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_22_150000) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_23_120000) do
   create_table "communications", force: :cascade do |t|
     t.integer "job_application_id", null: false
     t.integer "contact_id"
@@ -46,6 +46,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_22_150000) do
     t.datetime "last_polled_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "last_uid"
+    t.integer "uid_validity"
     t.index ["user_id"], name: "index_email_settings_on_user_id", unique: true
   end
 

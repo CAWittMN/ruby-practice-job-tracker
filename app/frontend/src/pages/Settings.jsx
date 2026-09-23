@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api'
+import { getThemePreference, setThemePreference } from '../theme'
 
 const EMPTY = {
   enabled: false,
@@ -19,6 +20,12 @@ export default function Settings() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const [notice, setNotice] = useState(null)
+  const [theme, setTheme] = useState(getThemePreference())
+
+  function chooseTheme(value) {
+    setTheme(value)
+    setThemePreference(value)
+  }
 
   useEffect(() => {
     api
@@ -108,6 +115,27 @@ export default function Settings() {
 
       {error && <div className="alert alert-error">{error}</div>}
       {notice && <div className="alert alert-success">{notice}</div>}
+
+      <div className="form-card">
+        <h2 className="settings-heading">Appearance</h2>
+        <p className="muted field-hint">Choose how the app looks.</p>
+        <div className="theme-toggle">
+          {[
+            { value: 'light', label: 'Light' },
+            { value: 'dark', label: 'Dark' },
+            { value: 'system', label: 'System' },
+          ].map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              className={`btn btn-sm ${theme === opt.value ? 'btn-primary' : 'btn-ghost'}`}
+              onClick={() => chooseTheme(opt.value)}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <form className="form-card" onSubmit={save}>
         <label className="checkbox">

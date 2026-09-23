@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api'
+import ConfirmButton from '../components/ConfirmButton'
 import { sourceLabel } from '../constants'
 
 export default function Inbox() {
@@ -8,6 +9,8 @@ export default function Inbox() {
   const [jobs, setJobs] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [notice, setNotice] = useState(null)
+  const [checking, setChecking] = useState(false)
   const [selection, setSelection] = useState({})
 
   useEffect(() => {
@@ -22,6 +25,24 @@ export default function Inbox() {
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false))
   }, [])
+
+  async function checkMail() {
+    setError(null)
+    setNotice(null)
+    setChecking(true)
+    try {
+      const res = await api.post('/api/email_setting/poll')
+      const mail = await api.get('/api/ingested_emails')
+      setEmails(mail || [])
+      setNotice(
+        `Checked mail: ${res.ingested} ingested (${res.matched} matched, ${res.pending} pending review).`,
+      )
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setChecking(false)
+    }
+  }
 
   function setSel(emailId, patch) {
     setSelection((prev) => ({ ...prev, [emailId]: { ...prev[emailId], ...patch } }))
@@ -67,7 +88,6 @@ export default function Inbox() {
   }
 
   async function remove(email) {
-    if (!window.confirm('Delete this email?')) return
     await api.delete(`/api/ingested_emails/${email.id}`)
     removeEmail(email.id)
   }
@@ -85,9 +105,20 @@ export default function Inbox() {
             job or create a new application.
           </p>
         </div>
+        <div className="nav-actions">
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={checkMail}
+            disabled={checking}
+          >
+            {checking ? 'Checking…' : 'Check mail'}
+          </button>
+        </div>
       </div>
 
       {error && <div className="alert alert-error">{error}</div>}
+      {notice && <div className="alert alert-success">{notice}</div>}
 
       {loading ? (
         <p>Loading…</p>
@@ -181,13 +212,12 @@ export default function Inbox() {
                   >
                     Ignore
                   </button>
-                  <button
-                    type="button"
+                  <ConfirmButton
                     className="btn btn-ghost btn-sm"
-                    onClick={() => remove(email)}
-                  >
-                    Delete
-                  </button>
+                    label="Delete"
+                    message="Delete this email?"
+                    onConfirm={() => remove(email)}
+                  />
                 </div>
               </div>
             )

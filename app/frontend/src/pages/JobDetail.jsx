@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api'
-import { sourceLabel, statusLabel, today } from '../constants'
+import ConfirmButton from '../components/ConfirmButton'
+import { SOURCES, STATUSES, sourceLabel, statusLabel, today } from '../constants'
 
 function emptyContact() {
   return { name: '', role: '', email: '', linkedin_url: '' }
@@ -119,7 +120,6 @@ export default function JobDetail() {
   }
 
   async function deleteContact(contactId) {
-    if (!window.confirm('Remove this contact?')) return
     await api.delete(`/api/job_applications/${id}/contacts/${contactId}`)
     setJob((prev) => ({
       ...prev,
@@ -162,8 +162,15 @@ export default function JobDetail() {
     setJob(updated)
   }
 
+  async function saveField(patch) {
+    setError(null)
+    const updated = await api.patch(`/api/job_applications/${id}`, {
+      job_application: patch,
+    })
+    setJob(updated)
+  }
+
   async function handleDelete() {
-    if (!window.confirm('Delete this job?')) return
     await api.delete(`/api/job_applications/${id}`)
     navigate('/jobs')
   }
@@ -183,7 +190,15 @@ export default function JobDetail() {
           <div className="breadcrumbs">
             <Link to="/jobs">← Applications</Link>
           </div>
-          <h1>{job.job_title}</h1>
+          <h1 className="editable-heading">
+            <EditableField
+              label="Job title"
+              value={job.job_title}
+              placeholder="Job title"
+              highlightMissing={false}
+              onSave={(v) => saveField({ job_title: v || job.job_title })}
+            />
+          </h1>
           <p className="muted">
             <span className={`badge badge-status status-${job.status}`}>
               {statusLabel(job.status)}
@@ -203,9 +218,12 @@ export default function JobDetail() {
               Mark as applied
             </button>
           )}
-          <button type="button" className="btn btn-ghost" onClick={handleDelete}>
-            Delete
-          </button>
+          <ConfirmButton
+            className="btn btn-ghost"
+            label="Delete"
+            message="Delete this job? This can't be undone."
+            onConfirm={handleDelete}
+          />
         </div>
       </div>
 
@@ -214,29 +232,106 @@ export default function JobDetail() {
       <div className="panel">
         <div className="panel-header">
           <h2>Details</h2>
+          <span className="muted field-hint">Click any field to edit. Highlighted fields are missing info.</span>
         </div>
         <dl className="detail-list">
           <div>
+            <dt>Company</dt>
+            <dd>
+              <EditableField
+                label="Company"
+                value={job.company_name}
+                placeholder="Company name"
+                highlightMissing={false}
+                onSave={(v) => saveField({ company_name: v || job.company_name })}
+              />
+            </dd>
+          </div>
+          <div>
             <dt>Status</dt>
-            <dd>{statusLabel(job.status)}</dd>
+            <dd>
+              <EditableField
+                label="Status"
+                type="select"
+                options={STATUSES}
+                value={job.status}
+                display={(v) => statusLabel(v)}
+                highlightMissing={false}
+                onSave={(v) => saveField({ status: v || 'interested' })}
+              />
+            </dd>
           </div>
           <div>
             <dt>Applied on</dt>
-            <dd>{job.applied_on || <span className="muted">Not applied yet</span>}</dd>
+            <dd>
+              <EditableField
+                label="Applied date"
+                type="date"
+                value={job.applied_on}
+                highlightMissing={job.status === 'applied'}
+                emptyLabel={job.status === 'applied' ? null : 'Not applied yet'}
+                onSave={(v) => saveField({ applied_on: v })}
+              />
+            </dd>
           </div>
           <div>
             <dt>Source</dt>
-            <dd>{sourceLabel(job.source)}</dd>
+            <dd>
+              <EditableField
+                label="Source"
+                type="select"
+                options={SOURCES}
+                value={job.source}
+                display={(v) => sourceLabel(v)}
+                onSave={(v) => saveField({ source: v })}
+              />
+            </dd>
+          </div>
+          <div>
+            <dt>Company website</dt>
+            <dd className="detail-value">
+              <EditableField
+                label="Company website"
+                type="url"
+                value={job.company_website}
+                placeholder="https://company.com"
+                display={() => 'Visit website'}
+                onSave={(v) => saveField({ company_website: v })}
+              />
+              {job.company_website && (
+                <a
+                  className="detail-open"
+                  href={job.company_website}
+                  target="_blank"
+                  rel="noreferrer"
+                  title="Open in new tab"
+                >
+                  ↗
+                </a>
+              )}
+            </dd>
           </div>
           <div>
             <dt>Job posting</dt>
-            <dd>
-              {job.job_posting_url ? (
-                <a href={job.job_posting_url} target="_blank" rel="noreferrer">
-                  View posting
+            <dd className="detail-value">
+              <EditableField
+                label="Job posting URL"
+                type="url"
+                value={job.job_posting_url}
+                placeholder="https://…/job/123"
+                display={() => 'View posting'}
+                onSave={(v) => saveField({ job_posting_url: v })}
+              />
+              {job.job_posting_url && (
+                <a
+                  className="detail-open"
+                  href={job.job_posting_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  title="Open in new tab"
+                >
+                  ↗
                 </a>
-              ) : (
-                <span className="muted">No posting</span>
               )}
             </dd>
           </div>
@@ -331,13 +426,14 @@ export default function JobDetail() {
                     >
                       Edit
                     </button>
-                    <button
-                      type="button"
+                    <ConfirmButton
                       className="btn btn-ghost btn-sm"
-                      onClick={() => deleteContact(c.id)}
-                    >
-                      Remove
-                    </button>
+                      label="Remove"
+                      message="Remove this contact?"
+                      confirmLabel="Remove"
+                      busyLabel="Removing…"
+                      onConfirm={() => deleteContact(c.id)}
+                    />
                   </div>
                 </li>
               ),
@@ -519,5 +615,100 @@ export default function JobDetail() {
         )}
       </div>
     </section>
+  )
+}
+
+// Inline click-to-edit field. Renders the value as a button; clicking swaps it
+// for an input/select. Missing values are highlighted with an "Add …" prompt so
+// gaps on auto-created or hand-entered jobs are obvious and one click to fill.
+function EditableField({
+  label,
+  value,
+  type = 'text',
+  options,
+  placeholder,
+  display,
+  emptyLabel,
+  highlightMissing = true,
+  onSave,
+}) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState(value ?? '')
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    setDraft(value ?? '')
+  }, [value])
+
+  const isEmpty = value === null || value === undefined || value === ''
+
+  async function submit(e) {
+    e.preventDefault()
+    setBusy(true)
+    try {
+      await onSave(draft === '' ? null : draft)
+      setEditing(false)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  function cancel() {
+    setDraft(value ?? '')
+    setEditing(false)
+  }
+
+  if (editing) {
+    return (
+      <form className="editable-field-form" onSubmit={submit}>
+        {type === 'select' ? (
+          <select value={draft ?? ''} onChange={(e) => setDraft(e.target.value)} autoFocus>
+            <option value="">—</option>
+            {options.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <input
+            type={type}
+            value={draft ?? ''}
+            placeholder={placeholder}
+            onChange={(e) => setDraft(e.target.value)}
+            autoFocus
+          />
+        )}
+        <div className="row-actions">
+          <button type="submit" className="btn btn-primary btn-sm" disabled={busy}>
+            Save
+          </button>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={cancel}>
+            Cancel
+          </button>
+        </div>
+      </form>
+    )
+  }
+
+  return (
+    <button
+      type="button"
+      className={`editable-field${isEmpty && highlightMissing ? ' is-missing' : ''}`}
+      onClick={() => setEditing(true)}
+      title={`Edit ${label.toLowerCase()}`}
+    >
+      {isEmpty ? (
+        highlightMissing ? (
+          <span className="editable-add">+ Add {label.toLowerCase()}</span>
+        ) : (
+          <span className="muted">{emptyLabel || `Add ${label.toLowerCase()}`}</span>
+        )
+      ) : display ? (
+        display(value)
+      ) : (
+        value
+      )}
+    </button>
   )
 }

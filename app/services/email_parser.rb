@@ -26,9 +26,19 @@ class EmailParser
     we\sreceived\syour\sapplication | application\sconfirmation
   /xi
 
+  # Marketing / non-job noise. When any of these hit we refuse to auto-create a
+  # tracker and drop the email into the ignored pile instead of the triage inbox.
+  JUNK_SUBJECT = /
+    scholarship | financial\s+aid | tuition | student\s+loans? | \bgrants?\b |
+    bootcamp | \benroll(?:ment|\snow)? | webinar | newsletter | \bcourse\b |
+    free\s+trial | \b\d{1,3}%\s*off | \bsale\b | discount | promo(?:tion|\s*code)? |
+    limited[-\s]time | act\s+now | donate | fundraiser |
+    apply\s+for\s+(?:aid|financial|a\s+scholarship|a\s+loan|a\s+grant|funding)
+  /xi
+
   Result = Struct.new(
     :message_id, :from_address, :from_name, :subject, :body, :received_at,
-    :kind, :detected_source, :detected_company, :detected_title,
+    :kind, :detected_source, :detected_company, :detected_title, :promotional,
     keyword_init: true
   )
 
@@ -48,7 +58,8 @@ class EmailParser
       kind: kind,
       detected_source: detected_source,
       detected_company: company,
-      detected_title: title
+      detected_title: title,
+      promotional: promotional?
     )
   end
 
@@ -72,8 +83,10 @@ class EmailParser
   end
 
   def body
-    text = text_part_body
-    text.presence || strip_html(html_part_body)
+    @body ||= begin
+      text = text_part_body
+      text.presence || strip_html(html_part_body)
+    end
   end
 
   def text_part_body
@@ -109,10 +122,38 @@ class EmailParser
   end
 
   def kind
+    return "other" if promotional?
     return "reply" if subject.match?(/\A\s*re:/i)
     return "application" if application_email?
 
     "other"
+  end
+
+  # Bulk marketing or otherwise not-a-job mail. Genuine application receipts and
+  # recruiter replies from recognized job sources are exempt.
+  def promotional?
+    return @promotional unless @promotional.nil?
+
+    @promotional =
+      if subject.match?(JUNK_SUBJECT)
+        true
+      elsif bulk_mailing? && !genuine_job_mail?
+        true
+      else
+        false
+      end
+  end
+
+  def bulk_mailing?
+    @mail["List-Unsubscribe"].present? || @mail["Precedence"].to_s.downcase.include?("bulk")
+  end
+
+  def genuine_job_mail?
+    return false if detected_source.blank?
+
+    subject.match?(/\A\s*re:/i) ||
+      subject.match?(APPLICATION_SUBJECT) ||
+      body.to_s.match?(APPLICATION_SUBJECT)
   end
 
   def application_email?

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api'
+import ConfirmButton from '../components/ConfirmButton'
 import { sourceLabel, statusLabel } from '../constants'
 
 export default function JobsList() {
@@ -22,7 +23,6 @@ export default function JobsList() {
   }
 
   async function handleDelete(id) {
-    if (!window.confirm('Delete this application?')) return
     await api.delete(`/api/job_applications/${id}`)
     setApplications((prev) => prev.filter((a) => a.id !== id))
   }
@@ -117,13 +117,12 @@ export default function JobsList() {
                     )}
                   </td>
                   <td>
-                    <button
-                      type="button"
+                    <ConfirmButton
                       className="btn btn-ghost btn-sm"
-                      onClick={() => handleDelete(a.id)}
-                    >
-                      Delete
-                    </button>
+                      label="Delete"
+                      message="Delete this application?"
+                      onConfirm={() => handleDelete(a.id)}
+                    />
                   </td>
                 </tr>
               ))}

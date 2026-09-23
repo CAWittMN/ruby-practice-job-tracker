@@ -6,6 +6,8 @@ class JobApplication < ApplicationRecord
   has_many :contacts, dependent: :destroy
   has_many :todos, dependent: :destroy
   has_many :communications, dependent: :destroy
+  # Keep ingested emails around when a job is deleted; just unlink them.
+  has_many :ingested_emails, dependent: :nullify
 
   accepts_nested_attributes_for :contacts, allow_destroy: true,
     reject_if: ->(attrs) { attrs[:name].blank? && attrs[:linkedin_url].blank? }

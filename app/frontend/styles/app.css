@@ -9,6 +9,20 @@
   --danger: #dc2626;
   --radius: 12px;
   --shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+  color-scheme: light;
+}
+
+[data-theme='dark'] {
+  --bg: #0f172a;
+  --panel: #1e293b;
+  --border: #334155;
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --primary: #818cf8;
+  --primary-hover: #a5b4fc;
+  --danger: #f87171;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.35);
+  color-scheme: dark;
 }
 
 * {
@@ -72,6 +86,16 @@ a:hover {
 
 .btn-ghost:hover {
   color: var(--text);
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: #fff;
+}
+
+.btn-danger:hover {
+  filter: brightness(0.93);
+  text-decoration: none;
 }
 
 .btn-block {
@@ -580,6 +604,149 @@ select:focus {
 .detail-list dd {
   margin: 0.2rem 0 0;
   font-weight: 500;
+}
+
+.detail-value {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.detail-open {
+  font-size: 0.9rem;
+  text-decoration: none;
+  color: var(--muted);
+}
+
+.detail-open:hover {
+  color: var(--accent, inherit);
+}
+
+/* Inline click-to-edit fields */
+.editable-field {
+  display: inline-flex;
+  align-items: center;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 0.1rem 0.35rem;
+  margin: -0.1rem -0.35rem;
+  font: inherit;
+  color: inherit;
+  font-weight: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.editable-field:hover {
+  border-color: var(--border, rgba(0, 0, 0, 0.15));
+  background: rgba(127, 127, 127, 0.12);
+}
+
+.editable-field.is-missing {
+  border-color: rgba(217, 119, 6, 0.5);
+  background: rgba(217, 119, 6, 0.1);
+}
+
+.editable-add {
+  color: #b45309;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.editable-heading .editable-field {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.editable-field-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.editable-field-form input,
+.editable-field-form select {
+  font: inherit;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.2));
+  border-radius: 6px;
+  min-width: 12rem;
+}
+
+/* Settings */
+.settings-heading {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+}
+
+.theme-toggle {
+  display: inline-flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+/* Inline confirmation popover */
+.confirm-pop-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.confirm-pop {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  z-index: 30;
+  width: max-content;
+  max-width: 240px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.18);
+  padding: 0.75rem;
+  animation: confirm-pop-in 0.12s ease-out;
+}
+
+.confirm-pop::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  right: 16px;
+  border: 7px solid transparent;
+  border-top-color: var(--panel);
+}
+
+.confirm-pop::before {
+  content: '';
+  position: absolute;
+  top: calc(100% + 1px);
+  right: 16px;
+  border: 7px solid transparent;
+  border-top-color: var(--border);
+}
+
+.confirm-pop-message {
+  margin: 0 0 0.6rem;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+.confirm-pop-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+@keyframes confirm-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .detail-contacts {

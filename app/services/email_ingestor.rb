@@ -1,6 +1,8 @@
 # Takes a parsed email and either logs it against an existing job/contact,
 # creates a new application from a confirmation email, or stores it for the
 # user to triage manually. All matching is scoped to a single owner (user).
+require "digest"
+
 class EmailIngestor
   def initialize(parsed, user: nil)
     @parsed = parsed
@@ -8,10 +10,12 @@ class EmailIngestor
   end
 
   def call
-    existing = IngestedEmail.find_by(message_id: @parsed.message_id) if @parsed.message_id.present?
+    fingerprint = @parsed.message_id.presence || synthetic_id
+    existing = IngestedEmail.find_by(message_id: fingerprint)
     return existing if existing
 
     record = build_record
+    record.message_id = fingerprint
 
     ActiveRecord::Base.transaction do
       match!(record)
@@ -47,9 +51,23 @@ class EmailIngestor
       log_communication(record, contact.job_application, contact)
     elsif (job = matching_job_by_domain)
       log_communication(record, job, nil)
-    elsif @parsed.kind == "application"
+    elsif application_confirmation?
       create_application(record)
+    elsif @parsed.promotional
+      record.status = "ignored"
     end
+  end
+
+  # Only auto-create a tracker when the mail is clearly a job application
+  # receipt: it must come from a recognized job source, or name both a role and
+  # a company. Anything weaker stays in the triage inbox instead of spawning a
+  # bogus application from marketing mail.
+  def application_confirmation?
+    return false unless @parsed.kind == "application"
+    return false if @parsed.promotional
+
+    @parsed.detected_source.present? ||
+      (@parsed.detected_title.present? && @parsed.detected_company.present?)
   end
 
   def matching_contact
@@ -111,5 +129,12 @@ class EmailIngestor
 
   def note_body
     [@parsed.subject, @parsed.body.to_s.strip.truncate(1000)].reject(&:blank?).join("\n\n")
+  end
+
+  # Stable stand-in id for the rare email with no Message-ID header, so repeat
+  # polls don't ingest it twice.
+  def synthetic_id
+    basis = [@parsed.from_address, @parsed.subject, @parsed.received_at&.to_i].join("|")
+    "sha256:#{Digest::SHA256.hexdigest(basis)}"
   end
 end
