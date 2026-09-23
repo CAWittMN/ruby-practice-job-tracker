@@ -49,22 +49,21 @@ with no public inbound endpoint.
 
 ### Configure
 
-Point the app at a dedicated mailbox (e.g. a spare inbox you forward job
-emails into). Set these environment variables:
+Configure IMAP from the app's **Settings** page (no environment variables
+needed). Point it at a dedicated mailbox you forward job emails into, enter your
+IMAP host, username, and an app password, then enable ingestion. Use **Test
+connection** to verify and **Check mail now** to pull immediately.
 
-| Variable        | Default | Notes                                   |
-| --------------- | ------- | --------------------------------------- |
-| `IMAP_HOST`     | —       | e.g. `imap.gmail.com` (required)        |
-| `IMAP_USERNAME` | —       | mailbox login (required)                |
-| `IMAP_PASSWORD` | —       | app password / token (required)         |
-| `IMAP_PORT`     | `993`   | IMAP SSL port                           |
-| `IMAP_SSL`      | `true`  | set `false` for plaintext (not advised) |
-| `IMAP_MAILBOX`  | `INBOX` | folder to poll                          |
-
-Store secrets outside version control (a gitignored `.env`, your shell, or your
-deploy environment). Never commit credentials.
+The stored IMAP password is encrypted at rest with Active Record Encryption. By
+default the encryption keys are derived from the app's `secret_key_base` (backed
+by the gitignored `config/master.key`). For production you can supply dedicated
+keys via `AR_ENCRYPTION_PRIMARY_KEY`, `AR_ENCRYPTION_DETERMINISTIC_KEY`, and
+`AR_ENCRYPTION_KEY_DERIVATION_SALT` (generate with `bin/rails db:encryption:init`).
 
 ### Run the poller
+
+Settings has a **Check mail now** button, or run it from the command line for
+all users who have enabled ingestion:
 
 ```bash
 bin/rails emails:poll        # ingest unseen messages once
@@ -74,7 +73,7 @@ bin/rails emails:poll_loop   # poll continuously (INTERVAL seconds, default 120)
 Schedule `emails:poll` with cron for periodic ingestion, e.g. every 5 minutes:
 
 ```cron
-*/5 * * * * cd /path/to/app && IMAP_HOST=... IMAP_USERNAME=... IMAP_PASSWORD=... bin/rails emails:poll
+*/5 * * * * cd /path/to/app && bin/rails emails:poll
 ```
 
 ### How matching works

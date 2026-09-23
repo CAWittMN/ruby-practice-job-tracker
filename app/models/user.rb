@@ -3,6 +3,7 @@ class User < ApplicationRecord
 
   has_many :job_applications, dependent: :destroy
   has_many :ingested_emails, dependent: :nullify
+  has_one :email_setting, dependent: :destroy
 
   normalizes :email, with: ->(email) { email.to_s.strip.downcase }
 

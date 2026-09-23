@@ -163,6 +163,12 @@ select:focus {
   border: 1px solid #fecaca;
 }
 
+.alert-success {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
 /* App shell */
 .app-shell {
   min-height: 100vh;

@@ -8,6 +8,7 @@ import JobsList from './pages/JobsList'
 import JobDetail from './pages/JobDetail'
 import NewJob from './pages/NewJob'
 import Inbox from './pages/Inbox'
+import Settings from './pages/Settings'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -54,6 +55,7 @@ export default function App() {
         <Route path="/jobs/new" element={<NewJob />} />
         <Route path="/jobs/:id" element={<JobDetail />} />
         <Route path="/inbox" element={<Inbox />} />
+        <Route path="/settings" element={<Settings />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

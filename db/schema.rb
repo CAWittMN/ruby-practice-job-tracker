@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_22_140001) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_22_150000) do
   create_table "communications", force: :cascade do |t|
     t.integer "job_application_id", null: false
     t.integer "contact_id"
@@ -32,6 +32,21 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_22_140001) do
     t.string "role"
     t.string "email"
     t.index ["job_application_id"], name: "index_contacts_on_job_application_id"
+  end
+
+  create_table "email_settings", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.boolean "enabled", default: false, null: false
+    t.string "imap_host"
+    t.integer "imap_port", default: 993, null: false
+    t.boolean "imap_ssl", default: true, null: false
+    t.string "imap_username"
+    t.text "imap_password"
+    t.string "imap_mailbox", default: "INBOX", null: false
+    t.datetime "last_polled_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_email_settings_on_user_id", unique: true
   end
 
   create_table "ingested_emails", force: :cascade do |t|
@@ -95,6 +110,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_22_140001) do
   add_foreign_key "communications", "contacts"
   add_foreign_key "communications", "job_applications"
   add_foreign_key "contacts", "job_applications"
+  add_foreign_key "email_settings", "users"
   add_foreign_key "ingested_emails", "communications"
   add_foreign_key "ingested_emails", "job_applications"
   add_foreign_key "ingested_emails", "users"

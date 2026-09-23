@@ -22,6 +22,7 @@ export default function Layout() {
           </NavLink>
           <NavLink to="/jobs">Applications</NavLink>
           <NavLink to="/inbox">Inbox</NavLink>
+          <NavLink to="/settings">Settings</NavLink>
         </nav>
         <div className="nav-actions">
           <Link to="/jobs/new" className="btn btn-primary">

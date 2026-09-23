@@ -28,6 +28,11 @@ Rails.application.routes.draw do
         post :create_application
       end
     end
+
+    resource :email_setting, only: %i[show update] do
+      post :test
+      post :poll
+    end
   end
 
   # SPA catch-all: let React Router handle client-side routes.

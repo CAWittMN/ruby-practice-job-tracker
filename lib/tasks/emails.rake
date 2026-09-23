@@ -1,34 +1,30 @@
 namespace :emails do
-  desc "Poll the configured IMAP mailbox once and ingest new messages"
+  desc "Poll every user's configured IMAP mailbox once and ingest new messages"
   task poll: :environment do
-    poller = ImapPoller.new
-    unless poller.configured?
-      warn "IMAP is not configured. Set IMAP_HOST, IMAP_USERNAME and IMAP_PASSWORD."
-      exit 1
+    users = User.joins(:email_setting).where(email_settings: { enabled: true })
+    if users.none?
+      warn "No users have email ingestion enabled. Configure it in Settings."
+      next
     end
 
-    results = poller.poll
-    matched = results.count { |r| r.status == "matched" }
-    puts "Ingested #{results.size} email(s): #{matched} matched, #{results.size - matched} pending review."
+    users.find_each do |user|
+      poller = ImapPoller.new(user: user)
+      next unless poller.configured?
+
+      results = poller.poll
+      matched = results.count { |r| r.status == "matched" }
+      puts "#{user.email}: ingested #{results.size} (#{matched} matched, #{results.size - matched} pending)."
+    rescue StandardError => e
+      warn "#{user.email}: poll error: #{e.class}: #{e.message}"
+    end
   end
 
-  desc "Continuously poll the IMAP mailbox every INTERVAL seconds (default 120)"
+  desc "Continuously poll enabled mailboxes every INTERVAL seconds (default 120)"
   task poll_loop: :environment do
     interval = Integer(ENV.fetch("INTERVAL", 120))
-    poller = ImapPoller.new
-    unless poller.configured?
-      warn "IMAP is not configured. Set IMAP_HOST, IMAP_USERNAME and IMAP_PASSWORD."
-      exit 1
-    end
-
     puts "Polling every #{interval}s. Ctrl-C to stop."
     loop do
-      begin
-        results = poller.poll
-        puts "[#{Time.current.iso8601}] ingested #{results.size} email(s)." unless results.empty?
-      rescue StandardError => e
-        warn "[#{Time.current.iso8601}] poll error: #{e.class}: #{e.message}"
-      end
+      Rake::Task["emails:poll"].execute
       sleep interval
     end
   end

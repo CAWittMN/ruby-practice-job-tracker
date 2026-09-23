@@ -1,38 +1,26 @@
 require "net/imap"
 require "mail"
 
-# Connects out to a mailbox over IMAP, ingests unseen messages, and marks them
-# read. Designed for locally deployed apps: the app dials out, so no public
-# inbound endpoint is required.
+# Connects out to a user's configured mailbox over IMAP, ingests unseen
+# messages, and marks them read. Designed for locally deployed apps: the app
+# dials out, so no public inbound endpoint is required.
 class ImapPoller
   class NotConfiguredError < StandardError; end
 
-  def self.config_from_env
-    {
-      host: ENV["IMAP_HOST"],
-      port: (ENV["IMAP_PORT"] || 993).to_i,
-      ssl: ENV.fetch("IMAP_SSL", "true") != "false",
-      username: ENV["IMAP_USERNAME"],
-      password: ENV["IMAP_PASSWORD"],
-      mailbox: ENV.fetch("IMAP_MAILBOX", "INBOX")
-    }
-  end
-
-  def initialize(config: self.class.config_from_env, user: User.first)
-    @config = config
+  def initialize(user:)
     @user = user
+    @setting = user&.email_setting
   end
 
   def configured?
-    @config[:host].present? && @config[:username].present? && @config[:password].present?
+    @setting&.ready?
   end
 
   def poll
-    raise NotConfiguredError, "Set IMAP_HOST, IMAP_USERNAME and IMAP_PASSWORD" unless configured?
+    raise NotConfiguredError, "IMAP is not configured or is disabled" unless configured?
 
-    imap = Net::IMAP.new(@config[:host], port: @config[:port], ssl: @config[:ssl])
-    imap.login(@config[:username], @config[:password])
-    imap.select(@config[:mailbox])
+    imap = connect
+    imap.select(@setting.mailbox)
 
     results = []
     imap.search(["UNSEEN"]).each do |seq|
@@ -43,11 +31,34 @@ class ImapPoller
       imap.store(seq, "+FLAGS", [:Seen])
     end
 
+    @setting.update_column(:last_polled_at, Time.current)
     results
   ensure
     imap&.logout
     imap&.disconnect
   rescue IOError
     # Connection already closed; nothing to clean up.
+  end
+
+  # Attempt a login to verify the stored credentials, then disconnect.
+  def test_connection
+    raise NotConfiguredError, "IMAP is not configured or is disabled" unless configured?
+
+    imap = connect
+    imap.select(@setting.mailbox)
+    true
+  ensure
+    imap&.logout
+    imap&.disconnect
+  rescue IOError
+    true
+  end
+
+  private
+
+  def connect
+    imap = Net::IMAP.new(@setting.imap_host, port: @setting.imap_port, ssl: @setting.imap_ssl)
+    imap.login(@setting.imap_username, @setting.imap_password)
+    imap
   end
 end
